@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swachh Sathi - Smart Waste Management & Sanitation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showRoleSelect()">
+                <div class="w-10 h-10 rounded-full bg-white text-emerald-700 flex items-center justify-center font-bold text-xl shadow">
+                    <i class="fas fa-recycle"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight" data-i18n="appTitle">Swachh Sathi</h1>
+                    <p class="text-xs text-emerald-100 hidden sm:block" data-i18n="appTagline">Smart Waste Management & Civic Sanitation</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Proposals & Swagger Links -->
+                <a href="/proposals.html" class="text-xs bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded font-medium flex items-center gap-1 transition">
+                    <i class="fas fa-book-open"></i> <span class="hidden md:inline">Proposals</span>
+                </a>
+                <a href="/swagger-ui.html" target="_blank" class="text-xs bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded font-medium flex items-center gap-1 transition">
+                    <i class="fas fa-code"></i> <span class="hidden md:inline">API Docs</span>
+                </a>
+
+                <!-- Language Switcher -->
+                <select id="langSelect" onchange="setLanguage(this.value)" class="bg-emerald-800 text-xs px-2.5 py-1.5 rounded border border-emerald-600 focus:outline-none">
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                </select>
+
+                <!-- Logout -->
+                <button onclick="logout()" id="logoutBtn" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded font-medium transition hidden">
+                    <i class="fas fa-sign-out-alt mr-1"></i> <span data-i18n="logout">Sign Out</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- 1. ROLE SELECTION SCREEN -->
+        <section id="roleSelectSection">
+            <div class="text-center max-w-2xl mx-auto my-8 space-y-3">
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold tracking-wide uppercase">Smart India Hackathon Edition</span>
+                <h2 class="text-3xl font-extrabold text-slate-800" data-i18n="selectRole">Select Your Role</h2>
+                <p class="text-slate-600 text-sm">Choose your portal to report waste, optimize pickup routes, or manage municipal sanitation operations.</p>
+            </div>
+
+            <!-- Role Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- Citizen Card -->
+                <div onclick="selectRole('ROLE_CITIZEN')" class="role-card cursor-pointer bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center space-y-4 hover:border-emerald-500">
+                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800" data-i18n="citizen">Citizen</h3>
+                    <p class="text-sm text-slate-600" data-i18n="citizenDesc">Report waste spots, track complaints & learn waste segregation.</p>
+                    <button class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition">
+                        Enter Citizen Portal &rarr;
+                    </button>
+                </div>
+
+                <!-- Sanitation Worker Card -->
+                <div onclick="selectRole('ROLE_WORKER')" class="role-card cursor-pointer bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center space-y-4 hover:border-amber-500">
+                    <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800" data-i18n="worker">Sanitation Worker</h3>
+                    <p class="text-sm text-slate-600" data-i18n="workerDesc">View assigned pickups, get optimized route & submit resolution proof.</p>
+                    <button class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition">
+                        Enter Worker Portal &rarr;
+                    </button>
+                </div>
+
+                <!-- Municipal Admin Card -->
+                <div onclick="selectRole('ROLE_ADMIN')" class="role-card cursor-pointer bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center space-y-4 hover:border-blue-500">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-building-columns"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800" data-i18n="admin">Municipal Admin</h3>
+                    <p class="text-sm text-slate-600" data-i18n="adminDesc">Citywide dashboard, assign tasks, verify resolutions & manage staff.</p>
+                    <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition">
+                        Enter Admin Portal &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Demo Accounts -->
+            <div class="mt-12 p-4 bg-white rounded-xl border border-slate-200 max-w-3xl mx-auto text-center space-y-3">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Instant 1-Click Demo Login</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="quickLogin('citizen@swachhsathi.gov.in', 'citizen123')" class="px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 rounded text-xs font-semibold border">
+                        <i class="fas fa-user mr-1"></i> Demo Citizen
+                    </button>
+                    <button onclick="quickLogin('worker@swachhsathi.gov.in', 'worker123')" class="px-3 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-700 rounded text-xs font-semibold border">
+                        <i class="fas fa-truck mr-1"></i> Demo Worker
+                    </button>
+                    <button onclick="quickLogin('admin@swachhsathi.gov.in', 'admin123')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 rounded text-xs font-semibold border">
+                        <i class="fas fa-shield-halved mr-1"></i> Demo Admin
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CITIZEN DASHBOARD -->
+        <section id="citizenDashboard" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Welcome, <span id="citizenName">Citizen</span>!</h2>
+                    <p class="text-xs text-slate-500">Report public waste spots to trigger automatic vicinity priority calculation.</p>
+                </div>
+                <button onclick="openJobModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+                    <i class="fas fa-briefcase"></i> <span data-i18n="applyWorker">Apply as Sanitation Worker</span>
+                </button>
+            </div>
+
+            <!-- Report Form + Map Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Report Form -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-3">
+                        <i class="fas fa-bullhorn text-emerald-600 text-lg"></i>
+                        <h3 class="text-lg font-bold text-slate-800" data-i18n="reportIssue">Report Waste Spot</h3>
+                    </div>
+
+                    <form id="reportForm" onsubmit="handleReportSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="wasteType">Waste Type</label>
+                            <select id="reportWasteType" required class="w-full text-sm p-2.5 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500">
+                                <option value="GENERAL" data-i18n="generalWaste">General Waste</option>
+                                <option value="HAZARDOUS" data-i18n="hazardousWaste">Hazardous Waste (Chemical / Bio)</option>
+                                <option value="CONSTRUCTION" data-i18n="constructionWaste">Construction Debris</option>
+                                <option value="OTHER" data-i18n="otherWaste">Other Waste</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="description">Description</label>
+                            <textarea id="reportDesc" required rows="3" placeholder="Describe the waste spot, volume, odor, or landmarks..." class="w-full text-sm p-2.5 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="address">Address / Landmark</label>
+                            <input id="reportAddress" type="text" placeholder="e.g. Near Sadashiv Peth Mandir" class="w-full text-sm p-2.5 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Latitude</label>
+                                <input id="reportLat" type="number" step="any" required readonly class="w-full text-xs p-2 rounded bg-slate-100 border text-slate-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Longitude</label>
+                                <input id="reportLng" type="number" step="any" required readonly class="w-full text-xs p-2 rounded bg-slate-100 border text-slate-600">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="uploadPhoto">Upload Photo</label>
+                            <input id="reportPhoto" type="file" accept="image/*" class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="useCurrentLocation()" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded flex items-center gap-1">
+                                <i class="fas fa-crosshairs"></i> Use GPS
+                            </button>
+                            <button type="submit" class="flex-grow py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-sm shadow transition" data-i18n="submitReport">
+                                Submit Complaint
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Citizen Map -->
+                <div class="space-y-2">
+                    <p class="text-xs text-slate-500 italic"><i class="fas fa-hand-pointer mr-1"></i> Click on map to position the waste spot marker</p>
+                    <div id="citizenMap" class="map-container"></div>
+                </div>
+            </div>
+
+            <!-- My Complaints List -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="text-lg font-bold text-slate-800" data-i18n="myComplaints">My Complaints</h3>
+                    <button onclick="loadCitizenComplaints()" class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                    </button>
+                </div>
+                <div id="citizenComplaintsList" class="space-y-3">
+                    <p class="text-slate-500 py-4 text-center">Loading complaints...</p>
+                </div>
+            </div>
+
+            <!-- Educational Guides & Helpline -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Waste Segregation Guide -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-seedling text-emerald-600"></i> <span data-i18n="eduSection">Waste Segregation Guide</span>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-2.5 bg-green-50 rounded border border-green-200">
+                            <p class="font-bold text-green-800">🟢 Wet / Organic</p>
+                            <p class="text-green-700 mt-1">Food scraps, vegetable peels, leaves. Suitable for composting.</p>
+                        </div>
+                        <div class="p-2.5 bg-blue-50 rounded border border-blue-200">
+                            <p class="font-bold text-blue-800">🔵 Dry / Recyclable</p>
+                            <p class="text-blue-700 mt-1">Paper, plastic bottles, metal cans, glass jars.</p>
+                        </div>
+                        <div class="p-2.5 bg-red-50 rounded border border-red-200">
+                            <p class="font-bold text-red-800">🔴 Hazardous / E-Waste</p>
+                            <p class="text-red-700 mt-1">Batteries, paints, chemicals, CFL bulbs, electronics.</p>
+                        </div>
+                        <div class="p-2.5 bg-amber-50 rounded border border-amber-200">
+                            <p class="font-bold text-amber-800">🟡 Sanitary Waste</p>
+                            <p class="text-amber-700 mt-1">Wrap securely in newspaper with a red mark.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Helpline Card -->
+                <div class="bg-gradient-to-br from-emerald-700 to-teal-800 text-white p-6 rounded-xl shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <span class="px-2.5 py-0.5 bg-emerald-600 text-xs rounded-full font-bold uppercase">Municipal Support</span>
+                        <h4 class="text-xl font-bold mt-2">Civic Sanitation Helpline</h4>
+                        <p class="text-sm text-emerald-100 mt-1" data-i18n="helpline">PMC Citizen Helpline: 1800-1030-222 | Emergency: 112</p>
+                    </div>
+                    <div class="text-xs text-emerald-200">
+                        Ward Office Timings: Mon - Sat (9:30 AM to 6:00 PM)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SANITATION WORKER DASHBOARD -->
+        <section id="workerDashboard" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Worker Portal: <span id="workerName">Worker</span></h2>
+                    <p class="text-xs text-slate-500">Assigned pick-up spots prioritized by vicinity severity algorithm.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">
+                        <span id="workerTaskCount">0</span> Active Tasks
+                    </span>
+                    <button onclick="optimizeRoute()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-route"></i> <span data-i18n="optimizeRoute">Optimize Pickup Route</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Optimized Route Banner (hidden by default) -->
+            <div id="optimizedRouteSection" class="hidden bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-circle-check text-emerald-600 text-lg"></i>
+                        <h4 class="font-bold text-emerald-900">Optimal Pickup Sequence Computed</h4>
+                    </div>
+                    <div class="flex gap-4 text-xs font-semibold text-emerald-800">
+                        <span><span data-i18n="totalStops">Total Stops</span>: <strong id="routeStopsCount">0</strong></span>
+                        <span><span data-i18n="estDistance">Estimated Distance</span>: <strong id="routeDistance">0 km</strong></span>
+                    </div>
+                </div>
+                <ol id="routeStopsTimeline" class="mt-3 space-y-2"></ol>
+            </div>
+
+            <!-- Worker Map + Tasks Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Worker Map -->
+                <div>
+                    <h3 class="text-sm font-bold text-slate-700 mb-2">Today's Pickup Locations</h3>
+                    <div id="workerMap" class="map-container"></div>
+                </div>
+
+                <!-- Assigned Tasks List -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h3 class="text-lg font-bold text-slate-800" data-i18n="activeTasks">Assigned Pickup Tasks</h3>
+                        <button onclick="loadWorkerTasks()" class="text-xs text-amber-600 hover:text-amber-700 font-semibold">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="workerTasksList" class="space-y-3 max-h-[480px] overflow-y-auto">
+                        <p class="text-slate-500 py-4 text-center">Loading assigned tasks...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. MUNICIPAL ADMIN DASHBOARD -->
+        <section id="adminDashboard" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Municipal Command Center: <span id="adminName">Admin</span></h2>
+                    <p class="text-xs text-slate-500">Live civic health metrics, complaints assignment & verification management.</p>
+                </div>
+                <button onclick="loadAllAdminComplaints(); loadAdminMetrics();" class="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded font-semibold text-slate-700">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh All
+                </button>
+            </div>
+
+            <!-- KPI Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-slate-500 font-semibold" data-i18n="totalComplaints">Total</p>
+                    <h3 id="metricTotal" class="text-2xl font-extrabold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-emerald-600 font-semibold" data-i18n="resolvedComplaints">Resolved</p>
+                    <h3 id="metricResolved" class="text-2xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-purple-600 font-semibold" data-i18n="pendingVerification">Pending Verif.</p>
+                    <h3 id="metricPending" class="text-2xl font-extrabold text-purple-600 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-blue-600 font-semibold" data-i18n="avgTurnaround">Turnaround</p>
+                    <h3 id="metricTurnaround" class="text-2xl font-extrabold text-blue-600 mt-1">0 d</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-amber-600 font-semibold">Active Workers</p>
+                    <h3 id="metricWorkers" class="text-2xl font-extrabold text-amber-600 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                    <p class="text-xs text-teal-600 font-semibold">Citizens</p>
+                    <h3 id="metricCitizens" class="text-2xl font-extrabold text-teal-600 mt-1">0</h3>
+                </div>
+            </div>
+
+            <!-- Citywide Map -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                <h3 class="text-sm font-bold text-slate-700">Citywide Incident Map & Sensitivity POIs</h3>
+                <div id="adminMap" class="map-container"></div>
+            </div>
+
+            <!-- Complaints Table -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">All Registered Complaints</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Waste Type</th>
+                                <th class="p-3">Priority</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Assigned Worker</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminComplaintsTbody">
+                            <tr><td colspan="6" class="p-4 text-center text-slate-500">Loading complaints...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Job Applications Queue -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-lg font-bold text-slate-800" data-i18n="jobApplications">Sanitation Worker Job Applications</h3>
+                <div id="jobAppsList" class="space-y-3">
+                    <p class="text-slate-500 py-2 text-center">Loading applications...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-xs border-t">
+        <p>&copy; 2026 Swachh Sathi. Built with Spring Boot 3 & Java 21 for Smart India Hackathon.</p>
+        <p class="mt-1"><a href="/proposals.html" class="text-emerald-400 hover:underline" data-i18n="proposalsLink">View Policy Proposals & SIH Roadmap</a></p>
+    </footer>
+
+    <!-- MODAL: AUTHENTICATION (Login / Register) -->
+    <div id="authModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative border border-slate-200">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="text-center mb-6">
+                <span id="authRoleBadge" class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wide">ROLE</span>
+                <h3 class="text-2xl font-bold text-slate-800 mt-2" data-i18n="login">Sign In</h3>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginFormContainer" class="space-y-4">
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="email">Email</label>
+                        <input id="loginEmail" type="email" required class="w-full text-sm p-2.5 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="password">Password</label>
+                        <input id="loginPassword" type="password" required class="w-full text-sm p-2.5 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-sm shadow transition" data-i18n="login">
+                        Sign In
+                    </button>
+                </form>
+                <p class="text-center text-xs text-slate-600">
+                    Don't have an account? <a href="#" onclick="showRegisterForm()" class="text-emerald-600 font-bold hover:underline" data-i18n="register">Register</a>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerFormContainer" class="space-y-4 hidden">
+                <form onsubmit="handleRegister(event)" class="space-y-3">
+                    <input type="hidden" id="registerRoleInput">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="fullName">Full Name</label>
+                        <input id="regName" type="text" required class="w-full text-sm p-2 rounded border border-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="email">Email</label>
+                        <input id="regEmail" type="email" required class="w-full text-sm p-2 rounded border border-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="password">Password</label>
+                        <input id="regPassword" type="password" required minlength="6" class="w-full text-sm p-2 rounded border border-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="phone">Phone</label>
+                        <input id="regPhone" type="tel" class="w-full text-sm p-2 rounded border border-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="address">Address / Ward</label>
+                        <input id="regAddress" type="text" class="w-full text-sm p-2 rounded border border-slate-300">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-sm shadow transition" data-i18n="register">
+                        Create Account
+                    </button>
+                </form>
+                <p class="text-center text-xs text-slate-600">
+                    Already registered? <a href="#" onclick="showLoginForm()" class="text-emerald-600 font-bold hover:underline" data-i18n="login">Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ASSIGN WORKER -->
+    <div id="assignModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative border">
+            <button onclick="closeAssignModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h4 class="text-lg font-bold text-slate-800 mb-4">Assign Complaint to Sanitation Worker</h4>
+            <form onsubmit="handleAssignSubmit(event)" class="space-y-4">
+                <input type="hidden" id="assignComplaintId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Active Worker</label>
+                    <select id="assignWorkerSelect" required class="w-full text-sm p-2.5 rounded border border-slate-300"></select>
+                </div>
+                <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold text-sm shadow">Assign Worker</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VERIFY RESOLUTION -->
+    <div id="verifyModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative border max-h-[90vh] overflow-y-auto">
+            <button onclick="closeVerifyModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h4 class="text-lg font-bold text-slate-800 mb-4" data-i18n="verifyQueue">Verify Complaint Resolution</h4>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-1">Before (Citizen Photo)</p>
+                    <img id="verifyOriginalPhoto" src="" class="w-full h-44 object-cover rounded border bg-slate-100" alt="Before">
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-1">After (Worker Resolution Proof)</p>
+                    <img id="verifyProofPhoto" src="" class="w-full h-44 object-cover rounded border bg-slate-100" alt="After">
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded border mb-4">
+                <p class="text-xs font-bold text-slate-700">Worker Notes:</p>
+                <p id="verifyNotesText" class="text-sm text-slate-600 mt-1"></p>
+            </div>
+
+            <input type="hidden" id="verifyComplaintId">
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Admin Feedback (Optional)</label>
+                <input id="verifyFeedback" type="text" placeholder="e.g. Spot clean verified by ward supervisor" class="w-full text-sm p-2 rounded border">
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="submitVerification(false)" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm shadow" data-i18n="reject">
+                    Reject / Reassign
+                </button>
+                <button onclick="submitVerification(true)" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-sm shadow" data-i18n="approve">
+                    Approve Resolution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: WORKER SUBMIT RESOLUTION -->
+    <div id="resolveModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative border">
+            <button onclick="closeResolveModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h4 class="text-lg font-bold text-slate-800 mb-4" data-i18n="submitProof">Submit Resolution Proof</h4>
+            <form onsubmit="handleResolveSubmit(event)" class="space-y-4">
+                <input type="hidden" id="resolveComplaintId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cleaned Spot Photo</label>
+                    <input id="resolvePhoto" type="file" accept="image/*" class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="notes">Resolution Notes</label>
+                    <textarea id="resolveNotes" required rows="3" placeholder="Waste cleared, bin emptied and sanitized..." class="w-full text-sm p-2.5 rounded border border-slate-300"></textarea>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-sm shadow">
+                    Submit for Admin Verification
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: JOB APPLICATION -->
+    <div id="jobModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative border">
+            <button onclick="closeJobModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h4 class="text-lg font-bold text-slate-800 mb-4" data-i18n="applyWorker">Apply as Sanitation Worker</h4>
+            <form id="jobForm" onsubmit="handleJobSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="fullName">Full Name</label>
+                    <input id="jobName" type="text" required class="w-full text-sm p-2 rounded border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="email">Email</label>
+                    <input id="jobEmail" type="email" required class="w-full text-sm p-2 rounded border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="phone">Phone</label>
+                    <input id="jobPhone" type="tel" required class="w-full text-sm p-2 rounded border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="address">Address / Ward</label>
+                    <input id="jobAddress" type="text" required class="w-full text-sm p-2 rounded border">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1" data-i18n="experience">Years of Experience</label>
+                    <input id="jobExp" type="number" min="0" max="40" value="0" class="w-full text-sm p-2 rounded border">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-sm shadow" data-i18n="submitApplication">
+                    Submit Application
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

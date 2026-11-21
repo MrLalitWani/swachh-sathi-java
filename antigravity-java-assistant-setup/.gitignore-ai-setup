@@ -1,0 +1,5 @@
+# Optional local-only AI scratch files
+.ai-local/
+.env
+.env.*
+!.env.example

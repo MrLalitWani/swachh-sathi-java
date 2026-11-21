@@ -1,0 +1,10 @@
+target/
+.git/
+.gitignore
+.agents/
+.mvn/
+.idea/
+*.iml
+*.log
+uploads/
+app.log
